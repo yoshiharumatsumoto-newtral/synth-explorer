@@ -5,50 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
-:root {
-  --bg:#080a08; --panel:rgba(255,255,255,0.03); --border:rgba(255,255,255,0.07);
-  --accent:#7cbb7c; --accent2:#4a8c6a; --text:rgba(255,255,255,0.75); --dim:rgba(255,255,255,0.25);
-}
+:root{--bg:#080a08;--panel:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.07);--accent:#7cbb7c;--accent2:#4a8c6a;--text:rgba(255,255,255,0.75);--dim:rgba(255,255,255,0.25);}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:20px 14px 60px;letter-spacing:0.04em;}
 h1{font-size:9px;font-weight:300;letter-spacing:0.4em;color:var(--dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);}
 .section{margin-bottom:16px;padding:12px;background:var(--panel);border:1px solid var(--border);border-radius:3px;}
 .slabel{font-size:8px;letter-spacing:0.3em;color:var(--dim);text-transform:uppercase;margin-bottom:12px;}
 .row{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px 6px;}
-
-/* knob */
 .kw{display:flex;flex-direction:column;align-items:center;gap:5px;}
 .klabel{font-size:8px;color:var(--dim);letter-spacing:0.15em;text-align:center;}
 .kval{font-size:9px;color:var(--accent);text-align:center;font-style:italic;}
 canvas.knob{touch-action:none;cursor:ns-resize;}
-
-/* wave */
 .wave-row{display:flex;gap:5px;}
 .wb{flex:1;padding:7px 3px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:2px;color:var(--dim);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;cursor:pointer;text-align:center;transition:all 0.12s;}
 .wb.active{background:rgba(124,187,124,0.12);border-color:var(--accent2);color:var(--accent);}
-
-/* presets */
 .preset-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;}
-.pb{padding:5px 9px;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--dim);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;cursor:pointer;transition:all 0.12s;}
-.pb:active{background:rgba(255,255,255,0.05);color:var(--text);}
-
-/* keyboard */
+.pb{padding:5px 9px;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--dim);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;cursor:pointer;}
 #keyboard{display:flex;gap:2px;margin-bottom:16px;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:3px;}
 .key{flex:1;height:50px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:2px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;font-size:7px;color:var(--dim);user-select:none;-webkit-user-select:none;transition:background 0.05s;}
 .key.pressed{background:rgba(124,187,124,0.18);border-color:var(--accent2);color:var(--accent);}
-
-/* play btn */
-#play-btn{width:100%;padding:12px;background:rgba(124,187,124,0.05);border:1px solid rgba(124,187,124,0.18);border-radius:3px;color:var(--accent);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.35em;cursor:pointer;margin-bottom:16px;transition:all 0.12s;}
+#play-btn{width:100%;padding:12px;background:rgba(124,187,124,0.05);border:1px solid rgba(124,187,124,0.18);border-radius:3px;color:var(--accent);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.35em;cursor:pointer;margin-bottom:16px;}
 #play-btn.playing{background:rgba(124,187,124,0.13);border-color:var(--accent);}
-
-/* code */
 #code-out{width:100%;background:#060906;border:1px solid var(--border);border-radius:3px;color:rgba(180,240,160,0.8);font-family:'DM Mono',monospace;font-size:9px;padding:10px;resize:vertical;min-height:120px;outline:none;line-height:1.7;}
 .btn-row{display:flex;gap:6px;margin-top:8px;}
-button.action{flex:1;padding:9px;background:rgba(124,187,124,0.07);border:1px solid var(--accent2);border-radius:2px;color:var(--accent);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;cursor:pointer;transition:all 0.12s;}
+button.action{flex:1;padding:9px;background:rgba(124,187,124,0.07);border:1px solid var(--accent2);border-radius:2px;color:var(--accent);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;cursor:pointer;}
 button.action.sec{border-color:var(--border);color:var(--dim);background:transparent;}
+
+/* ── Audio unlock overlay ── */
+#unlock{
+  position:fixed;inset:0;background:#080a08;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;cursor:pointer;gap:20px;
+}
+#unlock-btn{
+  padding:18px 40px;
+  background:rgba(124,187,124,0.08);
+  border:1px solid rgba(124,187,124,0.4);
+  border-radius:3px;
+  color:#7cbb7c;
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.4em;
+  text-transform:uppercase;
+}
+#unlock-sub{
+  font-size:9px;
+  color:rgba(255,255,255,0.2);
+  letter-spacing:0.3em;
+}
 </style>
 </head>
 <body>
+
+<!-- iOS audio unlock -->
+<div id="unlock">
+  <div id="unlock-btn">tap to enable audio</div>
+  <div id="unlock-sub">synth explorer</div>
+</div>
+
 <h1>synth explorer</h1>
 <div id="keyboard"></div>
 <button id="play-btn">▶ hold — test note</button>
@@ -107,6 +121,33 @@ button.action.sec{border-color:var(--border);color:var(--dim);background:transpa
 </div>
 
 <script>
+// ── Audio unlock (iOS) ───────────────────────────────────────
+let ac = null, mg = null;
+
+function unlockAudio() {
+  if (ac) return;
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  // iOSは最初のタップ内でsilentバッファを再生しないと解放されない
+  const buf = ac.createBuffer(1, 1, 22050);
+  const src = ac.createBufferSource();
+  src.buffer = buf;
+  src.connect(ac.destination);
+  src.start(0);
+  ac.resume().then(() => {
+    mg = ac.createGain();
+    mg.gain.value = P.vol;
+    mg.connect(ac.destination);
+    document.getElementById('unlock').style.display = 'none';
+  });
+}
+
+document.getElementById('unlock').addEventListener('touchend', e => {
+  e.preventDefault();
+  unlockAudio();
+});
+document.getElementById('unlock').addEventListener('click', unlockAudio);
+
+// ── Params ────────────────────────────────────────────────────
 const P={wave:'triangle',detune:6,octave:0,sub:0.3,harm:0.12,cut:1200,res:0.15,hicut:3500,atk:0.04,dec:0.2,sus:0.4,rel:0.35,lrate:0.5,ldepth:4,vol:0.55,sat:0.15};
 
 const PRESETS={
@@ -135,13 +176,7 @@ const KNOBS=[
   {id:'k-sat',p:'sat',min:0,max:1,step:0.01,fmt:v=>v.toFixed(2)},
 ];
 
-// Audio
-let ac=null,mg=null;
-function getAC(){
-  if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();mg=ac.createGain();mg.gain.value=P.vol;mg.connect(ac.destination);}
-  return ac;
-}
-
+// ── Synth ────────────────────────────────────────────────────
 function satCurve(a){
   const c=new Float32Array(512);
   for(let i=0;i<512;i++){const x=(i*2)/512-1;c[i]=x*(1+a)/(1+a*Math.abs(x));}
@@ -149,55 +184,52 @@ function satCurve(a){
 }
 
 function playNote(freq){
-  const a=getAC();a.resume();
-  const now=a.currentTime;
+  if(!ac||!mg)return null;
+  const now=ac.currentTime;
   const f=freq*Math.pow(2,P.octave);
-  const o1=a.createOscillator();o1.type=P.wave;o1.frequency.value=f;o1.detune.value=-P.detune;
-  const o2=a.createOscillator();o2.type=P.wave;o2.frequency.value=f;o2.detune.value=+P.detune;
-  const o3=a.createOscillator();o3.type='sine';o3.frequency.value=f*0.5;
-  const sg=a.createGain();sg.gain.value=P.sub;
-  const o4=a.createOscillator();o4.type='sine';o4.frequency.value=f*2;
-  const hg=a.createGain();hg.gain.value=P.harm;
-  const lfo=a.createOscillator();lfo.type='sine';lfo.frequency.value=P.lrate;
-  const lg=a.createGain();lg.gain.value=P.ldepth;
+  const o1=ac.createOscillator();o1.type=P.wave;o1.frequency.value=f;o1.detune.value=-P.detune;
+  const o2=ac.createOscillator();o2.type=P.wave;o2.frequency.value=f;o2.detune.value=+P.detune;
+  const o3=ac.createOscillator();o3.type='sine';o3.frequency.value=f*0.5;
+  const sg=ac.createGain();sg.gain.value=P.sub;
+  const o4=ac.createOscillator();o4.type='sine';o4.frequency.value=f*2;
+  const hg=ac.createGain();hg.gain.value=P.harm;
+  const lfo=ac.createOscillator();lfo.type='sine';lfo.frequency.value=P.lrate;
+  const lg=ac.createGain();lg.gain.value=P.ldepth;
   lfo.connect(lg);lg.connect(o1.detune);lg.connect(o2.detune);lfo.start();
-  const flt=a.createBiquadFilter();flt.type='lowpass';flt.frequency.value=P.cut;flt.Q.value=P.res;
-  const hc=a.createBiquadFilter();hc.type='lowpass';hc.frequency.value=P.hicut;hc.Q.value=0.5;
-  const sat=a.createWaveShaper();sat.curve=satCurve(P.sat);
-  const env=a.createGain();
+  const flt=ac.createBiquadFilter();flt.type='lowpass';flt.frequency.value=P.cut;flt.Q.value=P.res;
+  const hc=ac.createBiquadFilter();hc.type='lowpass';hc.frequency.value=P.hicut;hc.Q.value=0.5;
+  const sat=ac.createWaveShaper();sat.curve=satCurve(P.sat);
+  const env=ac.createGain();
   env.gain.setValueAtTime(0,now);
   env.gain.linearRampToValueAtTime(0.7,now+P.atk);
   env.gain.linearRampToValueAtTime(P.sus*0.7,now+P.atk+P.dec);
-  o1.connect(flt);o2.connect(flt);o3.connect(sg);sg.connect(flt);o4.connect(hg);hg.connect(flt);
+  o1.connect(flt);o2.connect(flt);
+  o3.connect(sg);sg.connect(flt);
+  o4.connect(hg);hg.connect(flt);
   flt.connect(hc);hc.connect(sat);sat.connect(env);env.connect(mg);
   [o1,o2,o3,o4].forEach(o=>o.start());
   return{o1,o2,o3,o4,lfo,env};
 }
 
 function releaseNote(n){
-  if(!n)return;
-  const a=getAC();
-  n.env.gain.setTargetAtTime(0,a.currentTime,P.rel*0.3);
+  if(!n||!ac)return;
+  n.env.gain.setTargetAtTime(0,ac.currentTime,P.rel*0.3);
   setTimeout(()=>{try{[n.o1,n.o2,n.o3,n.o4,n.lfo].forEach(o=>o.stop());}catch(e){}},P.rel*1000+500);
 }
 
-// Knob draw
+// ── Knob ────────────────────────────────────────────────────
 function drawKnob(cv,norm){
   const ctx=cv.getContext('2d');
   const w=cv.width,h=cv.height,cx=w/2,cy=h/2,r=w*0.37;
   ctx.clearRect(0,0,w,h);
   ctx.beginPath();ctx.arc(cx,cy,r,0.75*Math.PI,2.25*Math.PI);
   ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
-  if(norm>0){
-    ctx.beginPath();ctx.arc(cx,cy,r,0.75*Math.PI,(0.75+norm*1.5)*Math.PI);
-    ctx.strokeStyle='#7cbb7c';ctx.lineWidth=2.5;ctx.stroke();
-  }
+  if(norm>0){ctx.beginPath();ctx.arc(cx,cy,r,0.75*Math.PI,(0.75+norm*1.5)*Math.PI);ctx.strokeStyle='#7cbb7c';ctx.lineWidth=2.5;ctx.stroke();}
   const ang=(0.75+norm*1.5)*Math.PI;
   ctx.beginPath();ctx.arc(cx+Math.cos(ang)*r,cy+Math.sin(ang)*r,2,0,Math.PI*2);
   ctx.fillStyle=norm>0.01?'#7cbb7c':'rgba(255,255,255,0.3)';ctx.fill();
   ctx.beginPath();ctx.arc(cx,cy,r*0.28,0,Math.PI*2);ctx.fillStyle='#111611';ctx.fill();
 }
-
 function p2n(k,v){return Math.max(0,Math.min(1,(v-k.min)/(k.max-k.min)));}
 function n2p(k,n){return Math.round((k.min+n*(k.max-k.min))/k.step)*k.step;}
 
@@ -206,10 +238,8 @@ function initKnob(kd){
   const ve=document.getElementById('v-'+kd.p);
   let drag=false,sy=0,sn=0;
   function upd(n){
-    n=Math.max(0,Math.min(1,n));
-    P[kd.p]=n2p(kd,n);
-    drawKnob(cv,n);
-    ve.textContent=kd.fmt(P[kd.p]);
+    n=Math.max(0,Math.min(1,n));P[kd.p]=n2p(kd,n);
+    drawKnob(cv,n);ve.textContent=kd.fmt(P[kd.p]);
     if(kd.p==='vol'&&mg)mg.gain.value=P.vol;
   }
   function start(y){drag=true;sy=y;sn=p2n(kd,P[kd.p]);}
@@ -223,7 +253,7 @@ function initKnob(kd){
 }
 KNOBS.forEach(initKnob);
 
-// Wave btns
+// ── Wave ─────────────────────────────────────────────────────
 document.querySelectorAll('.wb').forEach(b=>{
   b.addEventListener('click',()=>{
     document.querySelectorAll('.wb').forEach(x=>x.classList.remove('active'));
@@ -231,7 +261,7 @@ document.querySelectorAll('.wb').forEach(b=>{
   });
 });
 
-// Presets
+// ── Presets ──────────────────────────────────────────────────
 const prow=document.getElementById('prow');
 Object.keys(PRESETS).forEach(name=>{
   const b=document.createElement('button');b.className='pb';b.textContent=name;
@@ -244,14 +274,14 @@ Object.keys(PRESETS).forEach(name=>{
   prow.appendChild(b);
 });
 
-// Keyboard
+// ── Keyboard ─────────────────────────────────────────────────
 const YONA=[440,493.88,523.25,659.25,698.46,880,987.77,1046.5,1318.51,1396.91];
 const NAMES=['A4','B4','C5','E5','F5','A5','B5','C6','E6','F6'];
 const kb=document.getElementById('keyboard');
 const activeK={};
 YONA.forEach((freq,i)=>{
   const k=document.createElement('div');k.className='key';k.textContent=NAMES[i];
-  const on=()=>{if(activeK[i])return;k.classList.add('pressed');activeK[i]=playNote(freq);};
+  const on=()=>{if(activeK[i]||!ac)return;k.classList.add('pressed');activeK[i]=playNote(freq);};
   const off=()=>{k.classList.remove('pressed');if(activeK[i]){releaseNote(activeK[i]);delete activeK[i];}};
   k.addEventListener('mousedown',e=>{e.preventDefault();on();});
   k.addEventListener('mouseup',off);k.addEventListener('mouseleave',off);
@@ -260,41 +290,41 @@ YONA.forEach((freq,i)=>{
   kb.appendChild(k);
 });
 
-// Play btn
+// ── Play btn ─────────────────────────────────────────────────
 const pb=document.getElementById('play-btn');
 let tn=null;
-pb.addEventListener('mousedown',e=>{e.preventDefault();if(tn)return;pb.classList.add('playing');pb.textContent='■ playing...';tn=playNote(523.25);});
-pb.addEventListener('touchstart',e=>{e.preventDefault();if(tn)return;pb.classList.add('playing');pb.textContent='■ playing...';tn=playNote(523.25);},{passive:false});
+const startPb=()=>{if(tn||!ac)return;pb.classList.add('playing');pb.textContent='■ playing...';tn=playNote(523.25);};
 const stopPb=()=>{if(!tn)return;pb.classList.remove('playing');pb.textContent='▶ hold — test note';releaseNote(tn);tn=null;};
-pb.addEventListener('mouseup',stopPb);pb.addEventListener('mouseleave',stopPb);pb.addEventListener('touchend',e=>{e.preventDefault();stopPb();},{passive:false});
+pb.addEventListener('mousedown',e=>{e.preventDefault();startPb();});
+pb.addEventListener('touchstart',e=>{e.preventDefault();startPb();},{passive:false});
+pb.addEventListener('mouseup',stopPb);pb.addEventListener('mouseleave',stopPb);
+pb.addEventListener('touchend',e=>{e.preventDefault();stopPb();},{passive:false});
 
-// Code gen
+// ── Code gen ─────────────────────────────────────────────────
 function genCode(){
   const s=P.sat.toFixed(2);
   document.getElementById('code-out').value=
-`// wave: ${P.wave} | detune: ±${P.detune}ct | oct: ${P.octave>=0?'+':''}${P.octave}
-// filter: ${Math.round(P.cut)}hz / Q${P.res.toFixed(2)} | hicut: ${Math.round(P.hicut)}hz
-// env: A${P.atk.toFixed(3)} D${P.dec.toFixed(2)} S${P.sus.toFixed(2)} R${P.rel.toFixed(2)}
-// lfo: ${P.lrate.toFixed(2)}hz depth${P.ldepth.toFixed(1)}ct
-// sub: ${P.sub.toFixed(2)} | harm: ${P.harm.toFixed(2)} | sat: ${s} | vol: ${P.vol.toFixed(2)}
+`// wave:${P.wave} detune:±${P.detune}ct oct:${P.octave>=0?'+':''}${P.octave}
+// filter:${Math.round(P.cut)}hz Q${P.res.toFixed(2)} hicut:${Math.round(P.hicut)}hz
+// env A${P.atk.toFixed(3)} D${P.dec.toFixed(2)} S${P.sus.toFixed(2)} R${P.rel.toFixed(2)}
+// lfo:${P.lrate.toFixed(2)}hz depth:${P.ldepth.toFixed(1)}ct
+// sub:${P.sub.toFixed(2)} harm:${P.harm.toFixed(2)} sat:${s} vol:${P.vol.toFixed(2)}
 
 function noteOn(id, freq) {
   if (activeNodes[id]) return;
   const ac = getAC(); ac.resume();
   const now = ac.currentTime;
   const f = freq * ${Math.pow(2,P.octave).toFixed(4)};
-
   const osc1 = ac.createOscillator();
   osc1.type = '${P.wave}'; osc1.frequency.value = f; osc1.detune.value = -${P.detune};
   const osc2 = ac.createOscillator();
   osc2.type = '${P.wave}'; osc2.frequency.value = f; osc2.detune.value = +${P.detune};
-  const osc3 = ac.createOscillator(); // sub sine
+  const osc3 = ac.createOscillator();
   osc3.type = 'sine'; osc3.frequency.value = f * 0.5;
   const subGain = ac.createGain(); subGain.gain.value = ${P.sub.toFixed(2)};
-  const osc4 = ac.createOscillator(); // harmonic
+  const osc4 = ac.createOscillator();
   osc4.type = 'sine'; osc4.frequency.value = f * 2;
   const harmGain = ac.createGain(); harmGain.gain.value = ${P.harm.toFixed(2)};
-
   const lfo = ac.createOscillator();
   const lfoGain = ac.createGain();
   lfo.type = 'sine'; lfo.frequency.value = ${P.lrate.toFixed(2)};
@@ -303,34 +333,29 @@ function noteOn(id, freq) {
   lfoGain.connect(osc1.detune);
   lfoGain.connect(osc2.detune);
   lfo.start();
-
   const filter = ac.createBiquadFilter();
   filter.type = 'lowpass';
   filter.frequency.value = ${Math.round(P.cut)};
   filter.Q.value = ${P.res.toFixed(2)};
   const hiCut = ac.createBiquadFilter();
   hiCut.type = 'lowpass'; hiCut.frequency.value = ${Math.round(P.hicut)};
-
   const sat = ac.createWaveShaper();
   const curve = new Float32Array(512);
   for (let i = 0; i < 512; i++) {
     const x = (i * 2) / 512 - 1;
-    curve[i] = x * ${1+parseFloat(s)} / (1 + ${s} * Math.abs(x));
+    curve[i] = x * ${(1+parseFloat(s)).toFixed(2)} / (1 + ${s} * Math.abs(x));
   }
   sat.curve = curve;
-
   const ampEnv = ac.createGain();
   ampEnv.gain.setValueAtTime(0, now);
   ampEnv.gain.linearRampToValueAtTime(0.7, now + ${P.atk.toFixed(3)});
   ampEnv.gain.linearRampToValueAtTime(${(P.sus*0.7).toFixed(3)}, now + ${(P.atk+P.dec).toFixed(3)});
-
   osc1.connect(filter); osc2.connect(filter);
   osc3.connect(subGain); subGain.connect(filter);
   osc4.connect(harmGain); harmGain.connect(filter);
   filter.connect(hiCut); hiCut.connect(sat);
   sat.connect(ampEnv); ampEnv.connect(masterGain);
   [osc1,osc2,osc3,osc4].forEach(o => o.start());
-
   activeNodes[id] = { osc1, osc2, osc3, osc4, lfo, ampEnv };
 }
 
@@ -349,17 +374,13 @@ document.getElementById('gen-btn').addEventListener('click',genCode);
 document.getElementById('copy-btn').addEventListener('click',()=>{
   const el=document.getElementById('code-out');
   el.select();
-  navigator.clipboard.writeText(el.value).then(()=>{
-    const b=document.getElementById('copy-btn');b.textContent='copied!';
-    setTimeout(()=>b.textContent='copy',1500);
-  }).catch(()=>{
-    // fallback for mobile
+  try{navigator.clipboard.writeText(el.value);}catch(e){
     const r=document.createRange();r.selectNode(el);
     window.getSelection().removeAllRanges();window.getSelection().addRange(r);
     document.execCommand('copy');
-    const b=document.getElementById('copy-btn');b.textContent='copied!';
-    setTimeout(()=>b.textContent='copy',1500);
-  });
+  }
+  const b=document.getElementById('copy-btn');b.textContent='copied!';
+  setTimeout(()=>b.textContent='copy',1500);
 });
 
 genCode();
