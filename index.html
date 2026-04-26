@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
+:root {
+  --bg:#080a08; --panel:rgba(255,255,255,0.03); --border:rgba(255,255,255,0.07);
+  --accent:#7cbb7c; --accent2:#4a8c6a; --text:rgba(255,255,255,0.75); --dim:rgba(255,255,255,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:20px 14px 60px;letter-spacing:0.04em;}
+h1{font-size:9px;font-weight:300;letter-spacing:0.4em;color:var(--dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.section{margin-bottom:16px;padding:12px;background:var(--panel);border:1px solid var(--border);border-radius:3px;}
+.slabel{font-size:8px;letter-spacing:0.3em;color:var(--dim);text-transform:uppercase;margin-bottom:12px;}
+.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px 6px;}
+
+/* knob */
+.kw{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.klabel{font-size:8px;color:var(--dim);letter-spacing:0.15em;text-align:center;}
+.kval{font-size:9px;color:var(--accent);text-align:center;font-style:italic;}
+canvas.knob{touch-action:none;cursor:ns-resize;}
+
+/* wave */
+.wave-row{display:flex;gap:5px;}
+.wb{flex:1;padding:7px 3px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:2px;color:var(--dim);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;cursor:pointer;text-align:center;transition:all 0.12s;}
+.wb.active{background:rgba(124,187,124,0.12);border-color:var(--accent2);color:var(--accent);}
+
+/* presets */
+.preset-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;}
+.pb{padding:5px 9px;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--dim);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;cursor:pointer;transition:all 0.12s;}
+.pb:active{background:rgba(255,255,255,0.05);color:var(--text);}
+
+/* keyboard */
+#keyboard{display:flex;gap:2px;margin-bottom:16px;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:3px;}
+.key{flex:1;height:50px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:2px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;font-size:7px;color:var(--dim);user-select:none;-webkit-user-select:none;transition:background 0.05s;}
+.key.pressed{background:rgba(124,187,124,0.18);border-color:var(--accent2);color:var(--accent);}
+
+/* play btn */
+#play-btn{width:100%;padding:12px;background:rgba(124,187,124,0.05);border:1px solid rgba(124,187,124,0.18);border-radius:3px;color:var(--accent);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.35em;cursor:pointer;margin-bottom:16px;transition:all 0.12s;}
+#play-btn.playing{background:rgba(124,187,124,0.13);border-color:var(--accent);}
+
+/* code */
+#code-out{width:100%;background:#060906;border:1px solid var(--border);border-radius:3px;color:rgba(180,240,160,0.8);font-family:'DM Mono',monospace;font-size:9px;padding:10px;resize:vertical;min-height:120px;outline:none;line-height:1.7;}
+.btn-row{display:flex;gap:6px;margin-top:8px;}
+button.action{flex:1;padding:9px;background:rgba(124,187,124,0.07);border:1px solid var(--accent2);border-radius:2px;color:var(--accent);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;cursor:pointer;transition:all 0.12s;}
+button.action.sec{border-color:var(--border);color:var(--dim);background:transparent;}
+</style>
+</head>
+<body>
+<h1>synth explorer</h1>
+<div id="keyboard"></div>
+<button id="play-btn">▶ hold — test note</button>
+<div class="preset-row" id="prow"></div>
+
+<div class="section">
+  <div class="slabel">oscillator</div>
+  <div class="wave-row" id="wrow">
+    <button class="wb active" data-wave="triangle">tri</button>
+    <button class="wb" data-wave="sine">sine</button>
+    <button class="wb" data-wave="sawtooth">saw</button>
+    <button class="wb" data-wave="square">sqr</button>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <div class="kw"><div class="klabel">detune</div><canvas class="knob" id="k-detune" width="44" height="44"></canvas><div class="kval" id="v-detune"></div></div>
+    <div class="kw"><div class="klabel">octave</div><canvas class="knob" id="k-octave" width="44" height="44"></canvas><div class="kval" id="v-octave"></div></div>
+    <div class="kw"><div class="klabel">sub mix</div><canvas class="knob" id="k-sub" width="44" height="44"></canvas><div class="kval" id="v-sub"></div></div>
+    <div class="kw"><div class="klabel">harm mix</div><canvas class="knob" id="k-harm" width="44" height="44"></canvas><div class="kval" id="v-harm"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="slabel">filter</div>
+  <div class="row">
+    <div class="kw"><div class="klabel">cutoff</div><canvas class="knob" id="k-cut" width="44" height="44"></canvas><div class="kval" id="v-cut"></div></div>
+    <div class="kw"><div class="klabel">resonance</div><canvas class="knob" id="k-res" width="44" height="44"></canvas><div class="kval" id="v-res"></div></div>
+    <div class="kw"><div class="klabel">hi cut</div><canvas class="knob" id="k-hicut" width="44" height="44"></canvas><div class="kval" id="v-hicut"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="slabel">envelope</div>
+  <div class="row">
+    <div class="kw"><div class="klabel">attack</div><canvas class="knob" id="k-atk" width="44" height="44"></canvas><div class="kval" id="v-atk"></div></div>
+    <div class="kw"><div class="klabel">decay</div><canvas class="knob" id="k-dec" width="44" height="44"></canvas><div class="kval" id="v-dec"></div></div>
+    <div class="kw"><div class="klabel">sustain</div><canvas class="knob" id="k-sus" width="44" height="44"></canvas><div class="kval" id="v-sus"></div></div>
+    <div class="kw"><div class="klabel">release</div><canvas class="knob" id="k-rel" width="44" height="44"></canvas><div class="kval" id="v-rel"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="slabel">lfo · master</div>
+  <div class="row">
+    <div class="kw"><div class="klabel">lfo rate</div><canvas class="knob" id="k-lrate" width="44" height="44"></canvas><div class="kval" id="v-lrate"></div></div>
+    <div class="kw"><div class="klabel">lfo depth</div><canvas class="knob" id="k-ldepth" width="44" height="44"></canvas><div class="kval" id="v-ldepth"></div></div>
+    <div class="kw"><div class="klabel">volume</div><canvas class="knob" id="k-vol" width="44" height="44"></canvas><div class="kval" id="v-vol"></div></div>
+    <div class="kw"><div class="klabel">saturation</div><canvas class="knob" id="k-sat" width="44" height="44"></canvas><div class="kval" id="v-sat"></div></div>
+  </div>
+</div>
+
+<div class="slabel" style="margin-bottom:8px">code output</div>
+<textarea id="code-out" readonly></textarea>
+<div class="btn-row">
+  <button class="action" id="gen-btn">generate code</button>
+  <button class="action sec" id="copy-btn">copy</button>
+</div>
+
+<script>
+const P={wave:'triangle',detune:6,octave:0,sub:0.3,harm:0.12,cut:1200,res:0.15,hicut:3500,atk:0.04,dec:0.2,sus:0.4,rel:0.35,lrate:0.5,ldepth:4,vol:0.55,sat:0.15};
+
+const PRESETS={
+  'original':{wave:'triangle',detune:6,octave:0,sub:0.3,harm:0.12,cut:1200,res:0.15,hicut:3500,atk:0.04,dec:0.2,sus:0.4,rel:0.35,lrate:0.5,ldepth:4,vol:0.55,sat:0.15},
+  'warm pad':{wave:'triangle',detune:12,octave:0,sub:0.6,harm:0.05,cut:800,res:0.08,hicut:2000,atk:0.4,dec:0.5,sus:0.7,rel:1.2,lrate:0.2,ldepth:2,vol:0.5,sat:0.05},
+  'glass':{wave:'sine',detune:3,octave:1,sub:0.1,harm:0.3,cut:4000,res:0.5,hicut:8000,atk:0.01,dec:0.1,sus:0.2,rel:0.6,lrate:0.8,ldepth:8,vol:0.45,sat:0.02},
+  'hollow':{wave:'square',detune:2,octave:-1,sub:0.8,harm:0.0,cut:600,res:0.3,hicut:1800,atk:0.08,dec:0.4,sus:0.5,rel:0.8,lrate:0.15,ldepth:3,vol:0.4,sat:0.3},
+  'buzz':{wave:'sawtooth',detune:8,octave:0,sub:0.2,harm:0.25,cut:1800,res:0.6,hicut:5000,atk:0.01,dec:0.15,sus:0.6,rel:0.4,lrate:1.2,ldepth:10,vol:0.38,sat:0.4},
+};
+
+const KNOBS=[
+  {id:'k-detune',p:'detune',min:-50,max:50,step:1,fmt:v=>Math.round(v)+' ct'},
+  {id:'k-octave',p:'octave',min:-2,max:2,step:1,fmt:v=>{const r=Math.round(v);return(r>=0?'+':'')+r;}},
+  {id:'k-sub',p:'sub',min:0,max:1,step:0.01,fmt:v=>v.toFixed(2)},
+  {id:'k-harm',p:'harm',min:0,max:0.5,step:0.01,fmt:v=>v.toFixed(2)},
+  {id:'k-cut',p:'cut',min:80,max:8000,step:10,fmt:v=>Math.round(v)+'hz'},
+  {id:'k-res',p:'res',min:0.01,max:10,step:0.01,fmt:v=>v.toFixed(2)},
+  {id:'k-hicut',p:'hicut',min:500,max:18000,step:100,fmt:v=>Math.round(v)+'hz'},
+  {id:'k-atk',p:'atk',min:0.001,max:2.0,step:0.001,fmt:v=>v.toFixed(3)+'s'},
+  {id:'k-dec',p:'dec',min:0.01,max:3.0,step:0.01,fmt:v=>v.toFixed(2)+'s'},
+  {id:'k-sus',p:'sus',min:0,max:1,step:0.01,fmt:v=>v.toFixed(2)},
+  {id:'k-rel',p:'rel',min:0.01,max:5.0,step:0.01,fmt:v=>v.toFixed(2)+'s'},
+  {id:'k-lrate',p:'lrate',min:0.05,max:8,step:0.05,fmt:v=>v.toFixed(2)+'hz'},
+  {id:'k-ldepth',p:'ldepth',min:0,max:50,step:0.5,fmt:v=>v.toFixed(1)+'ct'},
+  {id:'k-vol',p:'vol',min:0,max:1,step:0.01,fmt:v=>v.toFixed(2)},
+  {id:'k-sat',p:'sat',min:0,max:1,step:0.01,fmt:v=>v.toFixed(2)},
+];
+
+// Audio
+let ac=null,mg=null;
+function getAC(){
+  if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();mg=ac.createGain();mg.gain.value=P.vol;mg.connect(ac.destination);}
+  return ac;
+}
+
+function satCurve(a){
+  const c=new Float32Array(512);
+  for(let i=0;i<512;i++){const x=(i*2)/512-1;c[i]=x*(1+a)/(1+a*Math.abs(x));}
+  return c;
+}
+
+function playNote(freq){
+  const a=getAC();a.resume();
+  const now=a.currentTime;
+  const f=freq*Math.pow(2,P.octave);
+  const o1=a.createOscillator();o1.type=P.wave;o1.frequency.value=f;o1.detune.value=-P.detune;
+  const o2=a.createOscillator();o2.type=P.wave;o2.frequency.value=f;o2.detune.value=+P.detune;
+  const o3=a.createOscillator();o3.type='sine';o3.frequency.value=f*0.5;
+  const sg=a.createGain();sg.gain.value=P.sub;
+  const o4=a.createOscillator();o4.type='sine';o4.frequency.value=f*2;
+  const hg=a.createGain();hg.gain.value=P.harm;
+  const lfo=a.createOscillator();lfo.type='sine';lfo.frequency.value=P.lrate;
+  const lg=a.createGain();lg.gain.value=P.ldepth;
+  lfo.connect(lg);lg.connect(o1.detune);lg.connect(o2.detune);lfo.start();
+  const flt=a.createBiquadFilter();flt.type='lowpass';flt.frequency.value=P.cut;flt.Q.value=P.res;
+  const hc=a.createBiquadFilter();hc.type='lowpass';hc.frequency.value=P.hicut;hc.Q.value=0.5;
+  const sat=a.createWaveShaper();sat.curve=satCurve(P.sat);
+  const env=a.createGain();
+  env.gain.setValueAtTime(0,now);
+  env.gain.linearRampToValueAtTime(0.7,now+P.atk);
+  env.gain.linearRampToValueAtTime(P.sus*0.7,now+P.atk+P.dec);
+  o1.connect(flt);o2.connect(flt);o3.connect(sg);sg.connect(flt);o4.connect(hg);hg.connect(flt);
+  flt.connect(hc);hc.connect(sat);sat.connect(env);env.connect(mg);
+  [o1,o2,o3,o4].forEach(o=>o.start());
+  return{o1,o2,o3,o4,lfo,env};
+}
+
+function releaseNote(n){
+  if(!n)return;
+  const a=getAC();
+  n.env.gain.setTargetAtTime(0,a.currentTime,P.rel*0.3);
+  setTimeout(()=>{try{[n.o1,n.o2,n.o3,n.o4,n.lfo].forEach(o=>o.stop());}catch(e){}},P.rel*1000+500);
+}
+
+// Knob draw
+function drawKnob(cv,norm){
+  const ctx=cv.getContext('2d');
+  const w=cv.width,h=cv.height,cx=w/2,cy=h/2,r=w*0.37;
+  ctx.clearRect(0,0,w,h);
+  ctx.beginPath();ctx.arc(cx,cy,r,0.75*Math.PI,2.25*Math.PI);
+  ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+  if(norm>0){
+    ctx.beginPath();ctx.arc(cx,cy,r,0.75*Math.PI,(0.75+norm*1.5)*Math.PI);
+    ctx.strokeStyle='#7cbb7c';ctx.lineWidth=2.5;ctx.stroke();
+  }
+  const ang=(0.75+norm*1.5)*Math.PI;
+  ctx.beginPath();ctx.arc(cx+Math.cos(ang)*r,cy+Math.sin(ang)*r,2,0,Math.PI*2);
+  ctx.fillStyle=norm>0.01?'#7cbb7c':'rgba(255,255,255,0.3)';ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,r*0.28,0,Math.PI*2);ctx.fillStyle='#111611';ctx.fill();
+}
+
+function p2n(k,v){return Math.max(0,Math.min(1,(v-k.min)/(k.max-k.min)));}
+function n2p(k,n){return Math.round((k.min+n*(k.max-k.min))/k.step)*k.step;}
+
+function initKnob(kd){
+  const cv=document.getElementById(kd.id);
+  const ve=document.getElementById('v-'+kd.p);
+  let drag=false,sy=0,sn=0;
+  function upd(n){
+    n=Math.max(0,Math.min(1,n));
+    P[kd.p]=n2p(kd,n);
+    drawKnob(cv,n);
+    ve.textContent=kd.fmt(P[kd.p]);
+    if(kd.p==='vol'&&mg)mg.gain.value=P.vol;
+  }
+  function start(y){drag=true;sy=y;sn=p2n(kd,P[kd.p]);}
+  cv.addEventListener('mousedown',e=>{e.preventDefault();start(e.clientY);});
+  cv.addEventListener('touchstart',e=>{e.preventDefault();start(e.touches[0].clientY);},{passive:false});
+  window.addEventListener('mousemove',e=>{if(!drag)return;upd(sn+(sy-e.clientY)/130);});
+  window.addEventListener('touchmove',e=>{if(!drag)return;upd(sn+(sy-e.touches[0].clientY)/130);},{passive:false});
+  const stop=()=>{drag=false;};
+  window.addEventListener('mouseup',stop);window.addEventListener('touchend',stop);
+  upd(p2n(kd,P[kd.p]));
+}
+KNOBS.forEach(initKnob);
+
+// Wave btns
+document.querySelectorAll('.wb').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.wb').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');P.wave=b.dataset.wave;
+  });
+});
+
+// Presets
+const prow=document.getElementById('prow');
+Object.keys(PRESETS).forEach(name=>{
+  const b=document.createElement('button');b.className='pb';b.textContent=name;
+  b.addEventListener('click',()=>{
+    Object.assign(P,PRESETS[name]);
+    KNOBS.forEach(k=>{drawKnob(document.getElementById(k.id),p2n(k,P[k.p]));document.getElementById('v-'+k.p).textContent=k.fmt(P[k.p]);});
+    document.querySelectorAll('.wb').forEach(x=>x.classList.toggle('active',x.dataset.wave===P.wave));
+    if(mg)mg.gain.value=P.vol;
+  });
+  prow.appendChild(b);
+});
+
+// Keyboard
+const YONA=[440,493.88,523.25,659.25,698.46,880,987.77,1046.5,1318.51,1396.91];
+const NAMES=['A4','B4','C5','E5','F5','A5','B5','C6','E6','F6'];
+const kb=document.getElementById('keyboard');
+const activeK={};
+YONA.forEach((freq,i)=>{
+  const k=document.createElement('div');k.className='key';k.textContent=NAMES[i];
+  const on=()=>{if(activeK[i])return;k.classList.add('pressed');activeK[i]=playNote(freq);};
+  const off=()=>{k.classList.remove('pressed');if(activeK[i]){releaseNote(activeK[i]);delete activeK[i];}};
+  k.addEventListener('mousedown',e=>{e.preventDefault();on();});
+  k.addEventListener('mouseup',off);k.addEventListener('mouseleave',off);
+  k.addEventListener('touchstart',e=>{e.preventDefault();on();},{passive:false});
+  k.addEventListener('touchend',e=>{e.preventDefault();off();},{passive:false});
+  kb.appendChild(k);
+});
+
+// Play btn
+const pb=document.getElementById('play-btn');
+let tn=null;
+pb.addEventListener('mousedown',e=>{e.preventDefault();if(tn)return;pb.classList.add('playing');pb.textContent='■ playing...';tn=playNote(523.25);});
+pb.addEventListener('touchstart',e=>{e.preventDefault();if(tn)return;pb.classList.add('playing');pb.textContent='■ playing...';tn=playNote(523.25);},{passive:false});
+const stopPb=()=>{if(!tn)return;pb.classList.remove('playing');pb.textContent='▶ hold — test note';releaseNote(tn);tn=null;};
+pb.addEventListener('mouseup',stopPb);pb.addEventListener('mouseleave',stopPb);pb.addEventListener('touchend',e=>{e.preventDefault();stopPb();},{passive:false});
+
+// Code gen
+function genCode(){
+  const s=P.sat.toFixed(2);
+  document.getElementById('code-out').value=
+`// wave: ${P.wave} | detune: ±${P.detune}ct | oct: ${P.octave>=0?'+':''}${P.octave}
+// filter: ${Math.round(P.cut)}hz / Q${P.res.toFixed(2)} | hicut: ${Math.round(P.hicut)}hz
+// env: A${P.atk.toFixed(3)} D${P.dec.toFixed(2)} S${P.sus.toFixed(2)} R${P.rel.toFixed(2)}
+// lfo: ${P.lrate.toFixed(2)}hz depth${P.ldepth.toFixed(1)}ct
+// sub: ${P.sub.toFixed(2)} | harm: ${P.harm.toFixed(2)} | sat: ${s} | vol: ${P.vol.toFixed(2)}
+
+function noteOn(id, freq) {
+  if (activeNodes[id]) return;
+  const ac = getAC(); ac.resume();
+  const now = ac.currentTime;
+  const f = freq * ${Math.pow(2,P.octave).toFixed(4)};
+
+  const osc1 = ac.createOscillator();
+  osc1.type = '${P.wave}'; osc1.frequency.value = f; osc1.detune.value = -${P.detune};
+  const osc2 = ac.createOscillator();
+  osc2.type = '${P.wave}'; osc2.frequency.value = f; osc2.detune.value = +${P.detune};
+  const osc3 = ac.createOscillator(); // sub sine
+  osc3.type = 'sine'; osc3.frequency.value = f * 0.5;
+  const subGain = ac.createGain(); subGain.gain.value = ${P.sub.toFixed(2)};
+  const osc4 = ac.createOscillator(); // harmonic
+  osc4.type = 'sine'; osc4.frequency.value = f * 2;
+  const harmGain = ac.createGain(); harmGain.gain.value = ${P.harm.toFixed(2)};
+
+  const lfo = ac.createOscillator();
+  const lfoGain = ac.createGain();
+  lfo.type = 'sine'; lfo.frequency.value = ${P.lrate.toFixed(2)};
+  lfoGain.gain.value = ${P.ldepth.toFixed(1)};
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc1.detune);
+  lfoGain.connect(osc2.detune);
+  lfo.start();
+
+  const filter = ac.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = ${Math.round(P.cut)};
+  filter.Q.value = ${P.res.toFixed(2)};
+  const hiCut = ac.createBiquadFilter();
+  hiCut.type = 'lowpass'; hiCut.frequency.value = ${Math.round(P.hicut)};
+
+  const sat = ac.createWaveShaper();
+  const curve = new Float32Array(512);
+  for (let i = 0; i < 512; i++) {
+    const x = (i * 2) / 512 - 1;
+    curve[i] = x * ${1+parseFloat(s)} / (1 + ${s} * Math.abs(x));
+  }
+  sat.curve = curve;
+
+  const ampEnv = ac.createGain();
+  ampEnv.gain.setValueAtTime(0, now);
+  ampEnv.gain.linearRampToValueAtTime(0.7, now + ${P.atk.toFixed(3)});
+  ampEnv.gain.linearRampToValueAtTime(${(P.sus*0.7).toFixed(3)}, now + ${(P.atk+P.dec).toFixed(3)});
+
+  osc1.connect(filter); osc2.connect(filter);
+  osc3.connect(subGain); subGain.connect(filter);
+  osc4.connect(harmGain); harmGain.connect(filter);
+  filter.connect(hiCut); hiCut.connect(sat);
+  sat.connect(ampEnv); ampEnv.connect(masterGain);
+  [osc1,osc2,osc3,osc4].forEach(o => o.start());
+
+  activeNodes[id] = { osc1, osc2, osc3, osc4, lfo, ampEnv };
+}
+
+function noteOff(id) {
+  const n = activeNodes[id]; if (!n) return;
+  const ac = getAC();
+  n.ampEnv.gain.setTargetAtTime(0, ac.currentTime, ${(P.rel*0.3).toFixed(3)});
+  setTimeout(() => {
+    try { [n.osc1,n.osc2,n.osc3,n.osc4,n.lfo].forEach(o => o.stop()); } catch(e) {}
+    delete activeNodes[id];
+  }, ${Math.round(P.rel*1000+500)});
+}`;
+}
+
+document.getElementById('gen-btn').addEventListener('click',genCode);
+document.getElementById('copy-btn').addEventListener('click',()=>{
+  const el=document.getElementById('code-out');
+  el.select();
+  navigator.clipboard.writeText(el.value).then(()=>{
+    const b=document.getElementById('copy-btn');b.textContent='copied!';
+    setTimeout(()=>b.textContent='copy',1500);
+  }).catch(()=>{
+    // fallback for mobile
+    const r=document.createRange();r.selectNode(el);
+    window.getSelection().removeAllRanges();window.getSelection().addRange(r);
+    document.execCommand('copy');
+    const b=document.getElementById('copy-btn');b.textContent='copied!';
+    setTimeout(()=>b.textContent='copy',1500);
+  });
+});
+
+genCode();
+</script>
+</body>
+</html>
